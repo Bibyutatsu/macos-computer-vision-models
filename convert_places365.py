@@ -7,12 +7,12 @@ friction) and labels from GitHub via curl (same strategy as models.py).
   uv run python convert_places365.py
 
 Outputs:
-  ~/.blurdetector/models/places365.mlpackage
-  ~/.blurdetector/models/places365_labels.txt
+  ~/.snapgrade/models/places365.mlpackage
+  ~/.snapgrade/models/places365_labels.txt
 
 To activate scene classification, add to your shell profile:
-  export BLURDETECTOR_SCENE_MODEL="$HOME/.blurdetector/models/places365.mlpackage"
-  export BLURDETECTOR_SCENE_LABELS="$HOME/.blurdetector/models/places365_labels.txt"
+  export SNAPGRADE_SCENE_MODEL="$HOME/.snapgrade/models/places365.mlpackage"
+  export SNAPGRADE_SCENE_LABELS="$HOME/.snapgrade/models/places365_labels.txt"
 """
 
 from __future__ import annotations
@@ -182,8 +182,8 @@ def main() -> None:
     print(f"\nSaved model  → {out_model}")
     print(f"Saved labels → {out_labels}")
     print("\nTo activate, add to your shell profile:")
-    print(f'  export BLURDETECTOR_SCENE_MODEL="{out_model.resolve()}"')
-    print(f'  export BLURDETECTOR_SCENE_LABELS="{out_labels.resolve()}"')
+    print(f'  export SNAPGRADE_SCENE_MODEL="{out_model.resolve()}"')
+    print(f'  export SNAPGRADE_SCENE_LABELS="{out_labels.resolve()}"')
 
 
 if __name__ == "__main__":

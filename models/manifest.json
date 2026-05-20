@@ -1,0 +1,13 @@
+{
+  "_comment": "SHA-256 of each hosted model artifact. Keep in sync with snapgrade/models_manifest.json in the SnapGrade repo.",
+  "models": {
+    "yunet": "8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4",
+    "face_landmarker": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+    "u2netp": "309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8",
+    "yolo26n": "c333a16a7d31f99d5f2145a2c6fe25eeeb5f0bf717a91c332e929a1685c260a9",
+    "yolov8n": "e0b487879e60abcf173a0a6d4a6a59f9dd39249f3982fc951091e590106ffee9",
+    "nima": "86204fa50c97f704b5dba73e6bd2c62447a10a7d5fd38e3f5db9452610f9e675",
+    "places365": "6dcce77ccb22b12fd3a31930ac459f7341353d6d3d65eb5f764199cb06492de5",
+    "places365_labels": "2affba635eb657e7ca95f4e6cc69bd9fac29ef4c32aeb83cafdfcd06ec6a1ea6"
+  }
+}

@@ -1,8 +1,8 @@
 """
 Convert the titu1994 NIMA MobileNetV1 Keras checkpoint to CoreML.
 
-Input:  ~/.blurdetector/models/nima_mobilenet.h5
-Output: ~/.blurdetector/models/nima.mlpackage
+Input:  ~/.snapgrade/models/nima_mobilenet.h5
+Output: ~/.snapgrade/models/nima.mlpackage
 
 No TensorFlow required — weights are read directly from the h5 file
 and mapped into a PyTorch MobileNetV1 graph.
@@ -221,7 +221,7 @@ def main():
     mlmodel.save(str(args.output))
     print(f"\nSaved → {args.output}")
     print(f"\nTo enable aesthetic scoring, add this to your shell profile:")
-    print(f'  export BLURDETECTOR_NIMA_MODEL="{args.output.resolve()}"')
+    print(f'  export SNAPGRADE_NIMA_MODEL="{args.output.resolve()}"')
 
 
 if __name__ == "__main__":
