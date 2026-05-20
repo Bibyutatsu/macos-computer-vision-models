@@ -21,13 +21,18 @@ MODELS_DIR = Path(__file__).parent / "models"
 # Map registry name (as used by SnapGrade) -> hosted artifact filename.
 ARTIFACTS = {
     "yunet": "face_detection_yunet_2023mar.onnx",
+    "yunet_coreml": "yunet.mlpackage.zip",
     "face_landmarker": "face_landmarker.task",
     "u2netp": "u2netp.onnx",
+    "u2netp_coreml": "u2netp.mlpackage.zip",
     "yolo26n": "yolo26n.onnx",
+    "yolo26n_coreml": "yolo26n.mlpackage.zip",
     "yolov8n": "yolov8n.mlpackage.zip",
     "nima": "nima.mlpackage.zip",
     "places365": "places365.mlpackage.zip",
     "places365_labels": "places365_labels.txt",
+    "depth": "depth_anything_v2_small.onnx",
+    "depth_coreml": "depth_anything_v2_small.mlpackage.zip",
 }
 
 

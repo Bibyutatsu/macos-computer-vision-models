@@ -2,12 +2,17 @@
   "_comment": "SHA-256 of each hosted model artifact. Keep in sync with snapgrade/models_manifest.json in the SnapGrade repo.",
   "models": {
     "yunet": "8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4",
+    "yunet_coreml": "51e2d7a18cd742a6556121b8bfbd8e8dbf558c599233b2207ed5342b16aef617",
     "face_landmarker": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
     "u2netp": "309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8",
+    "u2netp_coreml": "e0c9849c36f376a2e82bb1553e2c8b10226dedfba8b5f1c57168f014fd6a796d",
     "yolo26n": "c333a16a7d31f99d5f2145a2c6fe25eeeb5f0bf717a91c332e929a1685c260a9",
+    "yolo26n_coreml": "9e95249cb3c86071af134f7f3d3adde33c8f49787a5f4e1a6c342f7efbd67ce1",
     "yolov8n": "e0b487879e60abcf173a0a6d4a6a59f9dd39249f3982fc951091e590106ffee9",
     "nima": "86204fa50c97f704b5dba73e6bd2c62447a10a7d5fd38e3f5db9452610f9e675",
     "places365": "6dcce77ccb22b12fd3a31930ac459f7341353d6d3d65eb5f764199cb06492de5",
-    "places365_labels": "2affba635eb657e7ca95f4e6cc69bd9fac29ef4c32aeb83cafdfcd06ec6a1ea6"
+    "places365_labels": "2affba635eb657e7ca95f4e6cc69bd9fac29ef4c32aeb83cafdfcd06ec6a1ea6",
+    "depth": "afb6a5c28f3b6bf1618c6e43f02073ef9dfdc70e937502d51603e57b0a1df10c",
+    "depth_coreml": "0786078cd66a5f3d4bbe41ba898e0cd5a5d42baa63a0540b9735b342383fc5a9"
   }
 }

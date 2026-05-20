@@ -14,10 +14,15 @@ All compiled models and serialized weights are stored in the [models/](models/) 
 | :--- | :--- | :--- | :--- | :--- |
 | **NIMA** | [`models/nima.mlpackage`](models/nima.mlpackage) | 6.0 MB | Aesthetic scoring (scale 1–10) | MobileNetV1 (AVA dataset) |
 | **Places365** | [`models/places365.mlpackage`](models/places365.mlpackage) | 44.8 MB | Scene classification (365 classes) | ResNet18 (CSAILVision) |
-| **YOLO26n** | [`models/yolo26n.onnx`](models/yolo26n.onnx) | 9.5 MB | General object detection (80 classes), NMS-free end-to-end | Ultralytics YOLO26 Nano |
-| **YOLOv8n** *(legacy)* | [`models/yolov8n.mlpackage`](models/yolov8n.mlpackage) | 6.2 MB | Superseded by YOLO26n; kept one release for fallback | Ultralytics YOLOv8 Nano |
+| **YOLO26n** | [`models/yolo26n.onnx`](models/yolo26n.onnx) | 9.5 MB | Object detection (80 classes), NMS-free | Ultralytics YOLO26 Nano |
+| **YOLO26n CoreML** | [`models/yolo26n.mlpackage`](models/yolo26n.mlpackage) | 4.9 MB | ANE-accelerated object detection | converted via onnx2torch |
+| **YOLOv8n** *(legacy)* | [`models/yolov8n.mlpackage`](models/yolov8n.mlpackage) | 6.2 MB | Superseded by YOLO26n; kept for fallback | Ultralytics YOLOv8 Nano |
 | **U2Netp** | [`models/u2netp.onnx`](models/u2netp.onnx) | 4.6 MB | Salient object / subject segmentation | U2-Net Portable |
+| **U2Netp CoreML** | [`models/u2netp.mlpackage`](models/u2netp.mlpackage) | 2.4 MB | ANE-accelerated saliency mask | converted via onnx2torch |
+| **Depth-Anything-V2-S** | *(not tracked — 94 MB, download from HuggingFace)* | 94 MB | Monocular relative depth estimation | DINOv2 ViT-S (onnx-community) |
+| **Depth-Anything CoreML** | [`models/depth_anything_v2_small.mlpackage`](models/depth_anything_v2_small.mlpackage) | 47 MB | ANE-accelerated depth estimation | converted via onnx2torch |
 | **YuNet** | [`models/face_detection_yunet_2023mar.onnx`](models/face_detection_yunet_2023mar.onnx) | 232 KB | Fast, multi-scale face detection | OpenCV Zoo YuNet |
+| **YuNet CoreML** | [`models/yunet.mlpackage`](models/yunet.mlpackage) | 200 KB | ANE-accelerated face detection | converted via onnx2torch |
 | **Face Landmarker**| [`models/face_landmarker.task`](models/face_landmarker.task) | 3.8 MB | Eye/Blink detection & face mesh | MediaPipe FaceLandmarker |
 
 ---
@@ -68,26 +73,91 @@ heuristics — no model download required. See `snapgrade/metrics/content_type.p
 
 ### 4. YOLO26n Object Detector
 * **Goal**: Identify 80 COCO classes (people, pets, vehicles, common objects) to inform subject detection and organization.
-* **Pipeline** (`convert_yolo26.py`):
-  1. Loads Ultralytics' pre-trained `yolo26n.pt` (auto-downloaded on first run).
-  2. Exports to ONNX with `nms=False`. YOLO26 is NMS-free end-to-end, so this yields an `[N, 6]` output (`x1, y1, x2, y2, score, class_id`) — already decoded and deduplicated, no Python-side NMS required.
-  3. Hosted as raw `.onnx` (no zip) and consumed via onnxruntime.
-
-  > **Why ONNX, not CoreML?** The current toolchain (torch 2.12 + coremltools 9.0) can't trace the CoreML graph — coremltools is validated only through torch 2.7. Revisit ANE/CoreML export when coremltools adds torch 2.12 support.
+* **Pipeline** (`convert_yolo26.py` → ONNX, `convert_yolo26_coreml.py` → CoreML):
+  1. `convert_yolo26.py`: Loads Ultralytics' pre-trained `yolo26n.pt` and exports to ONNX with `nms=False`. YOLO26 is NMS-free end-to-end, yielding `[1, 300, 6]` output (`x1, y1, x2, y2, score, class_id`).
+  2. `convert_yolo26_coreml.py`: Converts the ONNX to CoreML via `onnx2torch` → `torch.jit.trace` → `coremltools`. Output is the same NMS-free `[1, 300, 6]` tensor.
 
 ```bash
-# Re-run YOLO26 conversion:
+# Export ONNX (requires ultralytics):
 uv run python convert_yolo26.py
+
+# Convert ONNX → CoreML (run from SnapGrade repo root):
+uv run python ../macos-computer-vision-models/convert_yolo26_coreml.py
 ```
 
 ---
 
-### 5. Downstream / Built-in Models
+### 5. Depth-Anything-V2-Small
+* **Goal**: Monocular relative-depth estimation, used to separate foreground from background and flag the "subject out of focus" failure mode (sharp background, soft foreground) that a plain sharpness score misses.
+* **Source ONNX**: Pre-exported from [onnx-community/depth-anything-v2-small](https://huggingface.co/onnx-community/depth-anything-v2-small) on HuggingFace. Not tracked in git (94 MB); download manually and place at `models/depth_anything_v2_small.onnx`.
+* **Conversion** (`convert_depth_anything.py`):
+  1. Patches `Resize` nodes with `mode=cubic` → `mode=linear` in the ONNX graph (coremltools doesn't support `upsample_bicubic2d`; quality impact is imperceptible for relative depth).
+  2. Fixes the dynamic input to `[1, 3, 518, 518]` (518 = 14 × 37, matching the ViT patch size and SnapGrade's `_IN = 518`).
+  3. Converts via `onnx2torch` → `torch.jit.trace(strict=False)` → `coremltools`. Output: `[1, 518, 518]` depth map (higher = nearer).
+
+```bash
+# Convert ONNX → CoreML (run from SnapGrade repo root):
+uv run python ../macos-computer-vision-models/convert_depth_anything.py
+```
+
+---
+
+### 6. U2Netp Salient Segmentation
+* **Goal**: Segment the salient / primary subject region; output used as a bbox mask for subject-aware sharpness scoring.
+* **Conversion** (`convert_u2netp.py`):
+  1. Trims the ONNX graph to keep only the primary output (node 1959, shape `[1,1,320,320]`). The 5 auxiliary deep-supervision side outputs (nodes 1961–1965) have symbolic dimension names that trip coremltools.
+  2. Converts via `onnx2torch` → `torch.jit.trace(strict=False)` → `coremltools`. Input key: `input_1`; output key: `var_2227`.
+
+```bash
+# Convert ONNX → CoreML (run from SnapGrade repo root):
+uv run python ../macos-computer-vision-models/convert_u2netp.py
+```
+
+---
+
+### 7. YuNet Face Detector
+* **Goal**: Fast, multi-scale face detection producing bounding boxes and 5 facial keypoints.
+* **Conversion** (`convert_yunet.py`):
+  1. Converts via `onnx2torch` → `torch.jit.trace(strict=False)` → `coremltools`. Produces 12 output heads (cls/obj/bbox/kps at strides 8, 16, 32).
+
+```bash
+# Convert ONNX → CoreML (run from SnapGrade repo root):
+uv run python ../macos-computer-vision-models/convert_yunet.py
+```
+
+---
+
+### 8. Downstream / Built-in Models
 The remaining models are imported from official distribution points and hosted here for direct downloading:
 * **YOLOv8n** *(legacy)*: Superseded by YOLO26n above; the CoreML package is kept one release for fallback on installs that haven't re-downloaded.
-* **U2Netp**: Pre-trained portable salient object segmentation model, used for bounding box isolation.
-* **YuNet**: OpenCV Zoo's lightweight face detector, optimized for fast and accurate face detection at multiple scales.
 * **Face Landmarker**: Google MediaPipe's Task bundle containing models for 478 face landmarks, blendshapes, and blink estimation.
+
+---
+
+## Conversion toolchain
+
+All ONNX → CoreML conversions use the same pipeline since coremltools 7+ removed the ONNX frontend:
+
+```
+ONNX → onnx2torch.convert() → torch.jit.trace(strict=False) → coremltools.convert()
+```
+
+Run conversions from the SnapGrade repo root so they pick up the SnapGrade `.venv`:
+
+```bash
+cd ~/Projects/BlurDetector
+uv run python ../macos-computer-vision-models/convert_<model>.py
+```
+
+After converting, zip and regenerate the manifest:
+
+```bash
+cd models
+zip -r yunet.mlpackage.zip yunet.mlpackage
+# repeat for other models ...
+cd ..
+uv run python ../macos-computer-vision-models/update_manifest.py
+```
 
 ---
 
@@ -134,7 +204,9 @@ To use these models in SnapGrade, clone this repository or download the models, 
 export SNAPGRADE_NIMA_MODEL="/path/to/models/nima.mlpackage"
 export SNAPGRADE_SCENE_MODEL="/path/to/models/places365.mlpackage"
 export SNAPGRADE_SCENE_LABELS="/path/to/models/places365_labels.txt"
-export SNAPGRADE_SCREENDOC_MODEL="/path/to/models/screendoc.mlpackage"
+export SNAPGRADE_YOLO_MODEL="/path/to/models/yolo26n.mlpackage"
+export SNAPGRADE_U2NETP_MODEL="/path/to/models/u2netp.mlpackage"
+export SNAPGRADE_DEPTH_MODEL="/path/to/models/depth_anything_v2_small.mlpackage"
 ```
 
 ---

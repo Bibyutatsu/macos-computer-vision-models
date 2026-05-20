@@ -6,3 +6,9 @@ venv/
 .DS_Store
 *.part
 checkpoints/
+
+# Large source model files not suitable for git
+models/depth_anything_v2_small.onnx
+
+# PyTorch weights (conversion-time only; lives in checkpoints/ on disk)
+yolo26n.pt
