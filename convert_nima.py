@@ -11,7 +11,10 @@ and mapped into a PyTorch MobileNetV1 graph.
 from __future__ import annotations
 
 import argparse
+import shutil
+import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 
 import h5py
@@ -21,7 +24,7 @@ import torch.nn as nn
 
 REPO_ROOT = Path(__file__).resolve().parent
 
-
+CKPT_URL = "https://github.com/titu1994/neural-image-assessment/releases/download/v0.3/mobilenet_weights.h5"
 
 # ---------------------------------------------------------------------------
 # MobileNetV1 architecture
@@ -130,6 +133,28 @@ def load_weights(model: MobileNetV1NIMA, h5_path: Path):
         model.fc.bias.data   = torch.from_numpy(b)
 
 
+def _curl_download(url: str, dst: Path) -> None:
+    """Download via curl (preferred on macOS — avoids CA-bundle friction)."""
+    curl = shutil.which("curl")
+    if curl:
+        subprocess.run(
+            [curl, "-fL", "--retry", "3", "-o", str(dst), url],
+            check=True,
+        )
+    else:
+        urllib.request.urlretrieve(url, dst)
+
+
+def _download_checkpoint(dst: Path) -> None:
+    if dst.exists() and dst.stat().st_size > 1_000_000:
+        print(f"Checkpoint already cached: {dst}")
+        return
+    print(f"Downloading MobileNet-NIMA (~13 MB) → {dst} …")
+    tmp = dst.with_suffix(".part")
+    _curl_download(CKPT_URL, tmp)
+    tmp.rename(dst)
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -151,6 +176,9 @@ def main():
         help="Path to output CoreML .mlpackage bundle",
     )
     args = parser.parse_args()
+
+    args.input.parent.mkdir(parents=True, exist_ok=True)
+    _download_checkpoint(args.input)
 
     if not args.input.exists():
         print(f"ERROR: checkpoint not found at {args.input}")
