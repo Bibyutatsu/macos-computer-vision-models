@@ -34,6 +34,7 @@ ARTIFACTS = {
     "depth": "depth_anything_v2_small.onnx",
     "depth_coreml": "depth_anything_v2_small.mlpackage.zip",
     "hyperiqa": "hyperiqa.mlpackage.zip",
+    "topiq": "topiq.mlpackage.zip",
     "mobileclip_image": "mobileclip_s0_image.mlpackage.zip",
     "mobileclip_text": "mobileclip_s0_text.mlpackage.zip",
 }
